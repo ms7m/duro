@@ -17,6 +17,7 @@ from typing import Any, Callable
 from unittest.mock import MagicMock
 
 import pytest
+from smolagents.agents import ActionOutput
 from smolagents.memory import ActionStep, TaskStep
 from smolagents.models import ChatMessage
 from smolagents.monitoring import Timing
@@ -104,10 +105,12 @@ class MockAgent:
         memory_step.observations = f"Result of step {step_num}"
 
         if step_num >= self.finish_at_step:
-            memory_step.is_final_answer = True
-            return f"Final answer after {step_num} steps"
+            return ActionOutput(
+                output=f"Final answer after {step_num} steps",
+                is_final_answer=True,
+            )
 
-        return None
+        return ActionOutput(output=None, is_final_answer=False)
 
 
 # * Test: Temporal replay does NOT re-invoke the LLM *

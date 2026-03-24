@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field
 
 from loguru import logger
 from smolagents import CodeAgent, MultiStepAgent
+from smolagents.agents import ActionOutput
 from smolagents.memory import ActionStep, PlanningStep, TaskStep
 from smolagents.monitoring import Timing
 from temporalio import activity
@@ -170,12 +171,19 @@ class AgentActivities:
 
             try:
                 step_result = agent.step(memory_step)
+
+                # step() returns ActionOutput — _run_stream() normally sets
+                # is_final_answer on the memory step, but we bypass _run_stream,
+                # so we must check the return value ourselves.
+                if isinstance(step_result, ActionOutput) and step_result.is_final_answer:
+                    memory_step.is_final_answer = True
+                    final_answer = step_result.output
+                    done = True
+
                 agent.memory.steps.append(memory_step)
                 steps_completed += 1
 
-                if memory_step.is_final_answer:
-                    final_answer = step_result
-                    done = True
+                if done:
                     logger.info(
                         f"[activities] Agent finished at step {current_step}"
                     )
