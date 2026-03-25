@@ -172,9 +172,9 @@ class AgentActivities:
             try:
                 step_result = agent.step(memory_step)
 
-                # step() returns ActionOutput — _run_stream() normally sets
-                # is_final_answer on the memory step, but we bypass _run_stream,
-                # so we must check the return value ourselves.
+                # step() returns ActionOutput — but unlike _run_stream(),
+                # it does NOT set memory_step.is_final_answer. We must
+                # check the return value ourselves.
                 if isinstance(step_result, ActionOutput) and step_result.is_final_answer:
                     memory_step.is_final_answer = True
                     final_answer = step_result.output
